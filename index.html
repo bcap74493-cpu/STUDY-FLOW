@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0a0f">
+  <title>StudyFlow — Student Task Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">📚</div>
+      <div class="login-logo-text">Study<span>Flow</span></div>
+    </div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Manage your studies, track your progress</div>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="login-tab" onclick="switchAuthTab('register')">Sign Up</button>
+    </div>
+    <div id="loginForm">
+      <div class="input-group">
+        <label class="input-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input class="form-input" type="email" id="loginEmail" placeholder="you@school.edu" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input class="form-input" type="password" id="loginPass" placeholder="••••••••" />
+        </div>
+      </div>
+      <button class="btn-primary" onclick="handleLogin()">Sign In →</button>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="input-group">
+        <label class="input-label">Full Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input class="form-input" type="text" id="regName" placeholder="Alex Johnson" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input class="form-input" type="email" id="regEmail" placeholder="you@school.edu" />
+        </div>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input class="form-input" type="password" id="regPass" placeholder="Create a password" />
+        </div>
+      </div>
+      <button class="btn-primary" onclick="handleRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <div class="topbar-logo-icon">📚</div>
+        StudyFlow
+      </div>
+      <div class="nav-pill">
+        <button class="nav-btn active" onclick="showPage('dashboard')" id="nav-dashboard">🏠 Home</button>
+        <button class="nav-btn" onclick="showPage('tasks')" id="nav-tasks">✅ Tasks</button>
+        <button class="nav-btn" onclick="showPage('analytics')" id="nav-analytics">📊 Analytics</button>
+        <button class="nav-btn" onclick="showPage('notes')" id="nav-notes">📝 Notes</button>
+        <button class="nav-btn" onclick="showPage('calendar')" id="nav-calendar">📅 Calendar</button>
+        <button class="nav-btn" onclick="showPage('pomodoro')" id="nav-pomodoro">⏱ Pomodoro</button>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" onclick="toggleDark()" title="Toggle theme" id="themeBtn">🌙</button>
+      <button class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+      <div class="user-chip" onclick="showPage('settings')">
+        <div class="user-avatar" id="topUserAvatar">A</div>
+        <span class="user-name" id="topUserName">Student</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="dashboard-header">
+        <div class="greeting">Good <span id="timeGreeting">morning</span>, <span id="greetName">Student</span> 👋</div>
+        <div class="greeting-sub" id="todayDate">Loading...</div>
+      </div>
+      <div class="daily-summary" id="dailySummary">
+        <div class="daily-summary-title">📋 Today's Summary</div>
+        <div class="summary-items" id="summaryItems"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent-color:rgba(124,92,252,0.15)">
+          <div class="stat-icon">📋</div>
+          <div class="stat-value" id="totalTasksStat">0</div>
+          <div class="stat-label">Total Tasks</div>
+          <div class="stat-badge" style="background:rgba(124,92,252,0.15);color:var(--accent2)">📈 This week</div>
+        </div>
+        <div class="stat-card" style="--accent-color:rgba(16,185,129,0.15)">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="completedStat">0</div>
+          <div class="stat-label">Completed</div>
+          <div class="stat-badge" style="background:rgba(16,185,129,0.15);color:var(--green)">🎉 Keep going!</div>
+        </div>
+        <div class="stat-card" style="--accent-color:rgba(245,158,11,0.15)">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-value" id="streakStat">0</div>
+          <div class="stat-label">Day Streak</div>
+          <div class="stat-badge" style="background:rgba(245,158,11,0.15);color:var(--gold)">⚡ Streak</div>
+        </div>
+        <div class="stat-card" style="--accent-color:rgba(6,182,212,0.15)">
+          <div class="stat-icon">📝</div>
+          <div class="stat-value" id="notesStat">0</div>
+          <div class="stat-label">Notes</div>
+          <div class="stat-badge" style="background:rgba(6,182,212,0.15);color:var(--teal)">💡 Ideas saved</div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="glass-card">
+          <div class="card-title"><span class="title-dot"></span>Overall Progress</div>
+          <div class="progress-ring-wrap">
+            <div class="ring-container">
+              <svg width="130" height="130" viewBox="0 0 130 130">
+                <circle class="ring-bg" cx="65" cy="65" r="54"/>
+                <circle class="ring-fill" id="mainRing" cx="65" cy="65" r="54"
+                  stroke="url(#ringGrad)"
+                  stroke-dasharray="339.3"
+                  stroke-dashoffset="339.3"/>
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" style="stop-color:#7c5cfc"/>
+                    <stop offset="100%" style="stop-color:#06b6d4"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="ring-text">
+                <div class="ring-percent" id="ringPercent">0%</div>
+                <div class="ring-sub">done</div>
+              </div>
+            </div>
+            <div class="ring-stats">
+              <div class="ring-stat-row">
+                <div>
+                  <div class="ring-stat-label">Completed</div>
+                  <div class="mini-bar"><div class="mini-bar-fill" id="miniBar1" style="width:0%;background:var(--green)"></div></div>
+                </div>
+                <div class="ring-stat-val" id="ringComp">0</div>
+              </div>
+              <div class="ring-stat-row">
+                <div>
+                  <div class="ring-stat-label">Pending</div>
+                  <div class="mini-bar"><div class="mini-bar-fill" id="miniBar2" style="width:0%;background:var(--gold)"></div></div>
+                </div>
+                <div class="ring-stat-val" id="ringPend">0</div>
+              </div>
+              <div class="ring-stat-row">
+                <div>
+                  <div class="ring-stat-label">Overdue</div>
+                  <div class="mini-bar"><div class="mini-bar-fill" id="miniBar3" style="width:0%;background:var(--rose)"></div></div>
+                </div>
+                <div class="ring-stat-val" id="ringOver">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card streak-card">
+          <div class="card-title"><span class="title-dot"></span>Study Streak 🔥</div>
+          <div class="streak-display">
+            <div class="streak-flame">🔥</div>
+            <div>
+              <div class="streak-count" id="streakCount">0</div>
+              <div class="streak-label">days in a row</div>
+            </div>
+          </div>
+          <div class="streak-dots" id="streakDots"></div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-title"><span class="title-dot"></span>Upcoming Tasks</div>
+        <div id="upcomingTasks"><div class="empty-state"><div class="empty-icon">📭</div><p>No upcoming tasks.<br>Add a task to get started!</p></div></div>
+      </div>
+    </div>
+
+    <!-- TASKS PAGE -->
+    <div class="page" id="page-tasks">
+      <div style="margin-bottom:20px">
+        <div class="greeting" style="font-size:24px">My Tasks</div>
+        <div class="greeting-sub">Organize and track your assignments</div>
+      </div>
+      <div class="tasks-header">
+        <div class="search-bar">
+          <span>🔍</span>
+          <input type="text" placeholder="Search tasks..." id="searchInput" oninput="filterTasks()">
+        </div>
+        <button class="icon-btn" onclick="openAddTask()" style="width:auto;padding:0 16px;font-size:13px;font-weight:600;gap:6px;color:var(--text)">
+          + Add Task
+        </button>
+      </div>
+      <div class="filter-row" id="filterRow">
+        <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-chip" onclick="setFilter('today',this)">Today</button>
+        <button class="filter-chip" onclick="setFilter('pending',this)">Pending</button>
+        <button class="filter-chip" onclick="setFilter('completed',this)">Completed</button>
+        <button class="filter-chip" onclick="setFilter('overdue',this)">Overdue</button>
+      </div>
+      <div class="filter-row" id="subjectFilterRow" style="margin-bottom:14px"></div>
+      <div class="tasks-list" id="tasksList"></div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div style="margin-bottom:20px">
+        <div class="greeting" style="font-size:24px">Analytics</div>
+        <div class="greeting-sub">Track your study performance</div>
+      </div>
+      <div class="stats-grid" style="margin-bottom:20px" id="analyticsStats"></div>
+      <div class="chart-grid">
+        <div class="glass-card">
+          <div class="card-title"><span class="title-dot"></span>Task Completion</div>
+          <div class="chart-wrap"><canvas id="doughnutChart"></canvas></div>
+        </div>
+        <div class="glass-card">
+          <div class="card-title"><span class="title-dot"></span>By Subject</div>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+      </div>
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="card-title"><span class="title-dot"></span>Weekly Activity</div>
+        <div class="week-day-bars" id="weekBars"></div>
+      </div>
+      <div class="glass-card">
+        <div class="card-title"><span class="title-dot"></span>Subject Performance</div>
+        <div class="chart-wrap" style="height:300px"><canvas id="radarChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- NOTES PAGE -->
+    <div class="page" id="page-notes">
+      <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="greeting" style="font-size:24px">Notes</div>
+          <div class="greeting-sub">Capture your thoughts and ideas</div>
+        </div>
+      </div>
+      <div class="notes-grid" id="notesGrid"></div>
+    </div>
+
+    <!-- CALENDAR PAGE -->
+    <div class="page" id="page-calendar">
+      <div style="margin-bottom:20px">
+        <div class="greeting" style="font-size:24px">Calendar</div>
+        <div class="greeting-sub">View your tasks by date</div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="calendar-wrap">
+          <div class="cal-header">
+            <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+            <div class="cal-month" id="calMonthLabel"></div>
+            <button class="cal-nav" onclick="changeMonth(1)">›</button>
+          </div>
+          <div class="cal-days-header">
+            <div class="cal-day-name">SUN</div>
+            <div class="cal-day-name">MON</div>
+            <div class="cal-day-name">TUE</div>
+            <div class="cal-day-name">WED</div>
+            <div class="cal-day-name">THU</div>
+            <div class="cal-day-name">FRI</div>
+            <div class="cal-day-name">SAT</div>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="glass-card">
+          <div class="card-title"><span class="title-dot"></span>Tasks on <span id="selectedDateLabel">Today</span></div>
+          <div id="calendarTasks"><div class="empty-state"><div class="empty-icon">📅</div><p>Select a date to view tasks</p></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POMODORO PAGE -->
+    <div class="page" id="page-pomodoro">
+      <div style="margin-bottom:20px">
+        <div class="greeting" style="font-size:24px">Pomodoro Timer</div>
+        <div class="greeting-sub">Focus sessions for deep study</div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="glass-card" style="text-align:center">
+          <div class="pom-phases">
+            <button class="pom-phase-btn active" onclick="setPomPhase('focus',this)">Focus</button>
+            <button class="pom-phase-btn" onclick="setPomPhase('short',this)">Short Break</button>
+            <button class="pom-phase-btn" onclick="setPomPhase('long',this)">Long Break</button>
+          </div>
+          <div class="pomodoro-ring">
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="pomGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#7c5cfc"/>
+                  <stop offset="100%" style="stop-color:#06b6d4"/>
+                </linearGradient>
+              </defs>
+              <circle class="pomodoro-ring-bg" cx="100" cy="100" r="88"/>
+              <circle class="pomodoro-ring-fill" id="pomRingFill" cx="100" cy="100" r="88"
+                stroke-dasharray="553" stroke-dashoffset="0"/>
+            </svg>
+            <div class="pomodoro-center">
+              <div class="pom-time" id="pomTime">25:00</div>
+              <div class="pom-label" id="pomPhaseLabel">Focus</div>
+            </div>
+          </div>
+
+          <!-- Custom time adjust controls -->
+          <div class="pom-time-control">
+            <div>
+              <button class="pom-adj-btn" onclick="adjustPomTime(-5)">−5</button>
+              <div class="pom-adj-label">min</div>
+            </div>
+            <div>
+              <button class="pom-adj-btn" onclick="adjustPomTime(-1)">−1</button>
+              <div class="pom-adj-label">min</div>
+            </div>
+            <div style="padding:0 6px">
+              <div style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text2)" id="pomTotalMins">25 min</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">duration</div>
+            </div>
+            <div>
+              <button class="pom-adj-btn" onclick="adjustPomTime(1)">+1</button>
+              <div class="pom-adj-label">min</div>
+            </div>
+            <div>
+              <button class="pom-adj-btn" onclick="adjustPomTime(5)">+5</button>
+              <div class="pom-adj-label">min</div>
+            </div>
+          </div>
+          <div id="pomCustomBadge"></div>
+
+          <div class="timer-controls" style="margin-top:16px">
+            <button class="timer-btn start" id="pomStartBtn" onclick="togglePom()">▶ Start</button>
+            <button class="timer-btn reset" onclick="resetPom()">↺ Reset</button>
+          </div>
+          <div class="pom-sessions" id="pomSessions"></div>
+          <div style="margin-top:16px;color:var(--text2);font-size:13px">Session <span id="pomSessionNum">1</span> of 4</div>
+        </div>
+        <div>
+          <div class="glass-card" style="margin-bottom:20px">
+            <div class="card-title"><span class="title-dot"></span>Pomodoro Stats</div>
+            <div id="pomStats" style="display:flex;flex-direction:column;gap:14px;margin-top:8px"></div>
+            <div class="card-title" style="margin-top:24px"><span class="title-dot"></span>Recent Sessions</div>
+            <div id="pomLog" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+
+          <!-- Subject Computer -->
+          <div class="subject-computer glass-card" style="padding:22px">
+            <div class="sc-header">
+              <div class="sc-title">🧮 Subject Calculator</div>
+              <button onclick="scClear()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--rose);background:rgba(244,63,94,0.08);color:var(--rose);cursor:pointer;font-weight:600">AC</button>
+            </div>
+            <div class="sc-subject-select" id="scSubjectSelect"></div>
+            <div class="sc-display">
+              <div class="sc-expression" id="scExpression"></div>
+              <div class="sc-result" id="scResult">0</div>
+            </div>
+            <div class="sc-keypad">
+              <button class="sc-key clr" onclick="scInput('C')">C</button>
+              <button class="sc-key op" onclick="scInput('(')">(</button>
+              <button class="sc-key op" onclick="scInput(')')">)</button>
+              <button class="sc-key op" onclick="scInput('%')">%</button>
+
+              <button class="sc-key" onclick="scInput('7')">7</button>
+              <button class="sc-key" onclick="scInput('8')">8</button>
+              <button class="sc-key" onclick="scInput('9')">9</button>
+              <button class="sc-key op" onclick="scInput('÷')">÷</button>
+
+              <button class="sc-key" onclick="scInput('4')">4</button>
+              <button class="sc-key" onclick="scInput('5')">5</button>
+              <button class="sc-key" onclick="scInput('6')">6</button>
+              <button class="sc-key op" onclick="scInput('×')">×</button>
+
+              <button class="sc-key" onclick="scInput('1')">1</button>
+              <button class="sc-key" onclick="scInput('2')">2</button>
+              <button class="sc-key" onclick="scInput('3')">3</button>
+              <button class="sc-key op" onclick="scInput('−')">−</button>
+
+              <button class="sc-key" onclick="scInput('0')">0</button>
+              <button class="sc-key" onclick="scInput('.')">.</button>
+              <button class="sc-key op" onclick="scBackspace()">⌫</button>
+              <button class="sc-key op" onclick="scInput('+')">+</button>
+
+              <button class="sc-key eq span2" onclick="scCalculate()">=</button>
+              <button class="sc-key op" onclick="scInput('√')">√</button>
+              <button class="sc-key op" onclick="scInput('^')">x²</button>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.5px">HISTORY</div>
+            <div class="sc-history" id="scHistory"><div style="color:var(--text3);font-size:12px;padding:8px 0">No calculations yet</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULATOR PAGE -->
+    <div class="page" id="page-calculator">
+      <div style="margin-bottom:24px">
+        <div class="greeting" style="font-size:24px">Subject Calculator</div>
+        <div class="greeting-sub">Smart calculator tagged by subject — build your study history</div>
+      </div>
+      <div class="calc-page-grid">
+
+        <!-- Left: Calculator -->
+        <div class="glass-card" style="padding:28px">
+          <!-- Subject chips -->
+          <div style="margin-bottom:18px">
+            <div class="form-label" style="margin-bottom:10px">Select Subject</div>
+            <div class="sc-subject-select" id="scSubjectSelectMain"></div>
+          </div>
+
+          <!-- Display -->
+          <div class="sc-display" style="margin-bottom:18px">
+            <div class="sc-expression" id="scExpressionMain"></div>
+            <div class="sc-result" id="scResultMain">0</div>
+          </div>
+
+          <!-- Mode row -->
+          <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+            <button class="sc-mode-btn active" id="scModeStd" onclick="setCalcMode('std',this)">Standard</button>
+            <button class="sc-mode-btn" id="scModeSci" onclick="setCalcMode('sci',this)">Scientific</button>
+          </div>
+
+          <!-- Standard keypad -->
+          <div class="sc-keypad" id="scKeypadStd">
+            <button class="sc-key clr" onclick="scM('C')">C</button>
+            <button class="sc-key op" onclick="scM('(')">(</button>
+            <button class="sc-key op" onclick="scM(')')">)</button>
+            <button class="sc-key op" onclick="scM('%')">%</button>
+
+            <button class="sc-key" onclick="scM('7')">7</button>
+            <button class="sc-key" onclick="scM('8')">8</button>
+            <button class="sc-key" onclick="scM('9')">9</button>
+            <button class="sc-key op" onclick="scM('÷')">÷</button>
+
+            <button class="sc-key" onclick="scM('4')">4</button>
+            <button class="sc-key" onclick="scM('5')">5</button>
+            <button class="sc-key" onclick="scM('6')">6</button>
+            <button class="sc-key op" onclick="scM('×')">×</button>
+
+            <button class="sc-key" onclick="scM('1')">1</button>
+            <button class="sc-key" onclick="scM('2')">2</button>
+            <button class="sc-key" onclick="scM('3')">3</button>
+            <button class="sc-key op" onclick="scM('−')">−</button>
+
+            <button class="sc-key" onclick="scM('0')">0</button>
+            <button class="sc-key" onclick="scM('.')">.</button>
+            <button class="sc-key op" onclick="scMBack()">⌫</button>
+            <button class="sc-key op" onclick="scM('+')">+</button>
+
+            <button class="sc-key eq span2" onclick="scCalc()">=</button>
+            <button class="sc-key op" onclick="scMClear()">AC</button>
+            <button class="sc-key op" onclick="scM('±')">±</button>
+          </div>
+
+          <!-- Scientific keypad (hidden by default) -->
+          <div class="sc-keypad" id="scKeypadSci" style="display:none;margin-top:10px">
+            <button class="sc-key op" onclick="scM('sin(')">sin</button>
+            <button class="sc-key op" onclick="scM('cos(')">cos</button>
+            <button class="sc-key op" onclick="scM('tan(')">tan</button>
+            <button class="sc-key op" onclick="scM('log(')">log</button>
+
+            <button class="sc-key op" onclick="scM('√')">√</button>
+            <button class="sc-key op" onclick="scM('^')">xⁿ</button>
+            <button class="sc-key op" onclick="scM('π')">π</button>
+            <button class="sc-key op" onclick="scM('e')">e</button>
+
+            <button class="sc-key op" onclick="scM('abs(')">|x|</button>
+            <button class="sc-key op" onclick="scM('1/')">1/x</button>
+            <button class="sc-key op" onclick="scM('²')">x²</button>
+            <button class="sc-key op" onclick="scM('!')">n!</button>
+          </div>
+        </div>
+
+        <!-- Right: History + Stats -->
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <!-- Per-subject stats -->
+          <div class="glass-card">
+            <div class="card-title"><span class="title-dot"></span>Subject History</div>
+            <div id="scSubjectStats" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+
+          <!-- Calculation history -->
+          <div class="glass-card" style="flex:1">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div class="card-title" style="margin-bottom:0"><span class="title-dot"></span>Recent Calculations</div>
+              <button onclick="scMClearHistory()" style="font-size:11px;padding:4px 10px;border-radius:8px;border:1px solid var(--rose);background:rgba(244,63,94,0.08);color:var(--rose);cursor:pointer;font-weight:600">Clear</button>
+            </div>
+            <div class="sc-history" id="scHistoryMain" style="max-height:340px"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div style="margin-bottom:20px">
+        <div class="greeting" style="font-size:24px">Settings</div>
+        <div class="greeting-sub">Customize your experience</div>
+      </div>
+      <div class="glass-card" style="max-width:600px">
+        <div class="settings-section">
+          <div class="settings-title">👤 Profile</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Display Name</div></div>
+            <input class="form-field" style="width:180px" id="profileName" placeholder="Your name" oninput="saveProfile()">
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Email</div></div>
+            <span style="font-size:13px;color:var(--text2)" id="profileEmail">—</span>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">🎨 Appearance</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Dark Mode</div><div class="settings-desc">Toggle light/dark theme</div></div>
+            <button class="toggle on" id="darkToggle" onclick="toggleDark()"></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">🔔 Notifications</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Task Reminders</div><div class="settings-desc">Get notified when timers end</div></div>
+            <button class="toggle on" id="notifToggle" onclick="toggleNotif()"></button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">⚠️ Danger Zone</div>
+          <div class="settings-row">
+            <div><div class="settings-label">Clear All Data</div><div class="settings-desc">Remove all tasks, notes & streaks</div></div>
+            <button class="danger-btn" onclick="clearAllData()">🗑 Clear All</button>
+          </div>
+          <div class="settings-row">
+            <div><div class="settings-label">Sign Out</div></div>
+            <button class="danger-btn" onclick="logout()">← Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- FAB -->
+<button class="fab" onclick="openAddTask()" title="Add Task">
+  +
+  <span class="fab-label">Add Task</span>
+</button>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="bottom-nav-items">
+    <button class="bottom-nav-btn active" onclick="showPage('dashboard')" id="bnav-dashboard"><span class="bn-icon">🏠</span>Home</button>
+    <button class="bottom-nav-btn" onclick="showPage('tasks')" id="bnav-tasks"><span class="bn-icon">✅</span>Tasks</button>
+    <button class="bottom-nav-btn" onclick="showPage('analytics')" id="bnav-analytics"><span class="bn-icon">📊</span>Stats</button>
+    <button class="bottom-nav-btn" onclick="showPage('notes')" id="bnav-notes"><span class="bn-icon">📝</span>Notes</button>
+    <button class="bottom-nav-btn" onclick="showPage('pomodoro')" id="bnav-pomodoro"><span class="bn-icon">⏱</span>Timer</button>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">✨ Add New Task</div>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Title</label>
+      <input class="form-field" id="taskTitle" placeholder="e.g. Chapter 5 — Algebra Review" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description (optional)</label>
+      <textarea class="form-field" id="taskDesc" rows="2" placeholder="Add details..." style="resize:vertical"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject</label>
+      <div class="subject-grid" id="subjectGrid"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input class="form-field" type="date" id="taskDate" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Time</label>
+        <input class="form-field" type="time" id="taskTime" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Timer Duration (minutes)</label>
+      <input class="form-field" type="number" id="taskTimer" placeholder="e.g. 45" min="1" max="300" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Priority</label>
+      <select class="form-field" id="taskPriority">
+        <option value="normal">Normal</option>
+        <option value="high">High Priority</option>
+        <option value="low">Low Priority</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn-submit" id="taskSubmitBtn" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMER MODAL -->
+<div class="modal-overlay" id="timerModal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title">⏱ Task Timer</div>
+      <button class="modal-close" onclick="pauseAndCloseTimer()">×</button>
+    </div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:8px" id="timerTaskName"></div>
+    <div class="timer-display">
+      <div class="timer-clock" id="timerDisplay">00:00</div>
+    </div>
+    <div class="timer-controls">
+      <button class="timer-btn start" id="timerStartBtn" onclick="toggleTimer()">▶ Start</button>
+      <button class="timer-btn reset" onclick="resetTimer()">↺ Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTE MODAL -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <div class="modal-title" id="noteModalTitle">📝 New Note</div>
+      <button class="modal-close" onclick="closeModal('noteModal')">×</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input class="form-field" id="noteTitle" placeholder="Note title..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Content</label>
+      <textarea class="form-field" id="noteContent" rows="8" placeholder="Write your note here..." style="resize:vertical"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Subject Tag</label>
+      <select class="form-field" id="noteSubject"></select>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeModal('noteModal')">Cancel</button>
+      <button class="btn-submit" onclick="saveNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
